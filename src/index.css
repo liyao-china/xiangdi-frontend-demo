@@ -1,0 +1,55 @@
+:root {
+  --warm-bg: #f5f1e8;
+  --paper: #fdfbf6;
+  --gold: #b08d4f;
+  --gold-soft: rgba(176, 141, 79, 0.16);
+  --gold-line: rgba(176, 141, 79, 0.38);
+  --ink: #3a362e;
+  --ink-soft: #8c7b62;
+  --ink-mute: #a89b88;
+  --terrain: #9ba88d;
+  --water: #a8bfc9;
+  --warn: #c4886b;
+  --stroke: rgba(58, 54, 46, 0.1);
+  --shadow: 0 10px 28px rgba(58, 54, 46, 0.08);
+  --radius: 18px;
+  --ease: cubic-bezier(0.22, 1, 0.36, 1);
+  --sans: "Noto Sans SC", "PingFang SC", "Hiragino Sans GB", system-ui, sans-serif;
+  --serif: "Noto Serif SC", "Songti SC", "STSong", serif;
+  color: var(--ink);
+  background: var(--warm-bg);
+  font-family: var(--sans);
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  margin: 0;
+  min-height: 100%;
+  width: 100%;
+}
+
+body {
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 18% 12%, rgba(176, 141, 79, 0.12), transparent 28%),
+    radial-gradient(circle at 82% 18%, rgba(168, 191, 201, 0.16), transparent 26%),
+    var(--warm-bg);
+}
+
+button,
+input {
+  font: inherit;
+}
+
+button {
+  cursor: pointer;
+}
