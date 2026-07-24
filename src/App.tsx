@@ -1,8 +1,12 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import logo from './assets/logo.png'
 import urbanRealScene from './assets/urban-real-3d-case.png'
+import AgentConsole from './AgentConsole'
 import ReportModal from './ReportModal'
 import SceneOverlays from './SceneOverlays'
+import XianglingAgent from './XianglingAgent'
+import { useXiangdiAgent } from './agent/useXiangdiAgent'
+import type { AgentPageContext, AgentUiAction } from './agent/types'
 import type { Audience, FloatingMetric, LayerId, ScenarioRole, Stage, Tool } from './data'
 import {
   BUILDINGS,
@@ -47,6 +51,7 @@ function App() {
   const [activeLayers, setActiveLayers] = useState<LayerId[]>(['terrain'])
   const [reportOpen, setReportOpen] = useState(false)
   const [reportReady, setReportReady] = useState(false)
+  const [highlightedEvidence, setHighlightedEvidence] = useState<string | null>(null)
   const timers = useRef<number[]>([])
 
   const metrics = URBAN_METRICS
@@ -125,6 +130,16 @@ function App() {
     if (stage === 'analyze') return '指标正在从场地飘起计算'
     return '结果已就绪，可生成分析报告'
   }, [stage, scenario.title])
+
+  const stageAgentState =
+    stage === 'analyze' ? 'thinking' : stage === 'explain' ? 'speaking' : 'idle'
+  const agentMessage = useMemo(() => {
+    if (stage === 'locate') return '先选择城市地点，我会陪你完成楼栋定位与空间分析。'
+    if (stage === 'select') return '场景已经就绪，请点选一栋建筑查看可分析的楼层。'
+    if (stage === 'edit') return '楼栋已锁定。调整楼层后，我会开始综合推演。'
+    if (stage === 'analyze') return '正在结合日照、通勤、噪声与传统格局生成结论。'
+    return '分析已完成。我可以在报告中继续为你解读证据与建议。'
+  }, [stage])
 
   const runAnalysis = () => {
     clearTimers()
@@ -217,6 +232,95 @@ function App() {
     setReportOpen(false)
     runAnalysis()
   }
+
+  const handleAgentAction = (action: AgentUiAction) => {
+    switch (action.type) {
+      case 'OPEN_LAYER': {
+        if (!LAYERS.some((layer) => layer.id === action.layerId)) return
+        setActiveLayers((current) => {
+          if (current.includes(action.layerId as LayerId)) return current
+          const next = [...current, action.layerId as LayerId]
+          if (next.length > 3) next.shift()
+          return next
+        })
+        break
+      }
+      case 'CLOSE_LAYER':
+        setActiveLayers((current) =>
+          current.filter((layer) => layer !== action.layerId),
+        )
+        break
+      case 'FOCUS_BUILDING':
+        if (sceneReady && BUILDINGS.some((item) => item.id === action.buildingId)) {
+          handleBuildingSelect(action.buildingId)
+        }
+        break
+      case 'SET_FLOOR': {
+        const maxFloor = building?.floors ?? 32
+        setFloor(Math.max(1, Math.min(maxFloor, Math.round(action.value))))
+        break
+      }
+      case 'SET_SUN_TIME':
+        setHour(Math.max(6, Math.min(18, Math.round(action.value))))
+        setActiveLayers((current) =>
+          current.includes('sun')
+            ? current
+            : ([...current, 'sun'].slice(-3) as LayerId[]),
+        )
+        break
+      case 'OPEN_REPORT':
+        if (reportReady) {
+          setReportOpen(true)
+        } else if (building) {
+          runAnalysis()
+          schedule(() => setReportOpen(true), 2700)
+        }
+        break
+      case 'FOCUS_EVIDENCE':
+        setHighlightedEvidence(action.evidenceId)
+        if (reportReady) setReportOpen(true)
+        break
+      case 'START_NARRATION':
+        break
+    }
+  }
+
+  const agentContext = useMemo<AgentPageContext>(
+    () => ({
+      page: reportOpen ? 'report' : 'scene',
+      scenario: scenario.title,
+      location,
+      stage,
+      buildingId,
+      buildingName: building?.name ?? null,
+      floor: building ? floor : null,
+      sunHour: hour,
+      activeLayers,
+      reportReady,
+      modernScore: reportReady ? modernScore : undefined,
+      cultureScore: reportReady ? cultureScore : undefined,
+    }),
+    [
+      activeLayers,
+      building,
+      buildingId,
+      cultureScore,
+      floor,
+      hour,
+      location,
+      modernScore,
+      reportOpen,
+      reportReady,
+      scenario.title,
+      stage,
+    ],
+  )
+  const agent = useXiangdiAgent(agentContext, handleAgentAction)
+  const agentState =
+    agent.state === 'idle' && stageAgentState !== 'idle' ? stageAgentState : agent.state
+  const liveAgentMessage =
+    [...agent.messages].reverse().find((message) => message.role === 'assistant')?.text ||
+    agentMessage
 
   if (screen === 'boot') {
     return (
@@ -359,6 +463,8 @@ function App() {
         </div>
       </div>
 
+      <XianglingAgent variant="scene" state={agentState} message={liveAgentMessage} />
+
       <header className="topbar glass">
         <div className="brand">
           <img className="brand-logo" src={logo} alt="相地 XIANGDI" />
@@ -442,6 +548,8 @@ function App() {
       </nav>
 
       <aside className="right-panel glass">
+        <AgentConsole agent={agent} variant="scene" />
+
         <div className="insight-card">
           <div className="panel-title">
             <h2>◔ AI 相地洞察</h2>
@@ -622,6 +730,8 @@ function App() {
           }
           modernScore={modernScore}
           cultureScore={cultureScore}
+          agent={agent}
+          highlightedEvidence={highlightedEvidence}
           onClose={() => setReportOpen(false)}
           onApply={applySuggestion}
         />

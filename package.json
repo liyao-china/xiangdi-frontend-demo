@@ -4,12 +4,20 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
+    "dev": "concurrently -k -n WEB,AGENT -c green,cyan \"npm:dev:web\" \"npm:dev:agent\"",
+    "dev:web": "vite",
+    "dev:agent": "node --watch server/index.mjs",
+    "start:agent": "node server/index.mjs",
     "build": "tsc -b && vite build",
     "lint": "oxlint",
     "preview": "vite preview"
   },
   "dependencies": {
+    "@google/model-viewer": "^4.3.1",
+    "dotenv": "^17.4.2",
+    "express": "^5.2.1",
+    "multer": "^2.2.0",
+    "openai": "^6.48.0",
     "react": "^19.2.7",
     "react-dom": "^19.2.7"
   },
@@ -18,6 +26,7 @@
     "@types/react": "^19.2.17",
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^6.0.3",
+    "concurrently": "^10.0.3",
     "oxlint": "^1.71.0",
     "typescript": "~6.0.2",
     "vite": "^8.1.1"

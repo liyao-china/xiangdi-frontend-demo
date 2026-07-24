@@ -1,4 +1,7 @@
 import type { Mode } from './data'
+import AgentConsole from './AgentConsole'
+import XianglingAgent from './XianglingAgent'
+import type { AgentController } from './agent/types'
 import {
   RURAL_RADAR_CULTURE,
   RURAL_RADAR_MODERN,
@@ -121,6 +124,8 @@ export default function ReportModal({
   planName,
   modernScore,
   cultureScore,
+  agent,
+  highlightedEvidence,
   onClose,
   onApply,
 }: {
@@ -129,6 +134,8 @@ export default function ReportModal({
   planName: string
   modernScore: number
   cultureScore: number
+  agent: AgentController
+  highlightedEvidence: string | null
   onClose: () => void
   onApply: () => void
 }) {
@@ -156,6 +163,18 @@ export default function ReportModal({
             关闭
           </button>
         </div>
+
+        <XianglingAgent
+          variant="report"
+          state={agent.state}
+          message={
+            [...agent.messages].reverse().find((message) => message.role === 'assistant')
+              ?.text ||
+            '我已读取当前地块、所选楼层和双轨评分。下面将从关键证据出发，说明结论与可执行建议。'
+          }
+        />
+
+        <AgentConsole agent={agent} variant="report" />
 
         <div className="report-grid">
           <div className="score-card">
@@ -204,7 +223,12 @@ export default function ReportModal({
           </div>
           <div className="evidence-list">
             {content.evidence.map((item, index) => (
-              <div className="evidence-item" key={item.id}>
+              <div
+                className={`evidence-item ${
+                  highlightedEvidence === item.id ? 'highlighted' : ''
+                }`}
+                key={item.id}
+              >
                 <strong>
                   证据 {index + 1} · {item.id}
                 </strong>

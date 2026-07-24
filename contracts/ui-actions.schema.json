@@ -1,0 +1,53 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://xiangdi.local/contracts/ui-actions.schema.json",
+  "title": "Xiangdi Safe UI Action",
+  "oneOf": [
+    {
+      "type": "object",
+      "required": ["type", "layerId"],
+      "properties": {
+        "type": { "enum": ["OPEN_LAYER", "CLOSE_LAYER"] },
+        "layerId": {
+          "enum": ["terrain", "slope", "sun", "flow", "view", "noise"]
+        }
+      },
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "required": ["type", "buildingId"],
+      "properties": {
+        "type": { "const": "FOCUS_BUILDING" },
+        "buildingId": { "type": "string" }
+      },
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "required": ["type", "value"],
+      "properties": {
+        "type": { "enum": ["SET_FLOOR", "SET_SUN_TIME"] },
+        "value": { "type": "number" }
+      },
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "required": ["type", "evidenceId"],
+      "properties": {
+        "type": { "const": "FOCUS_EVIDENCE" },
+        "evidenceId": { "type": "string" }
+      },
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "required": ["type"],
+      "properties": {
+        "type": { "enum": ["OPEN_REPORT", "START_NARRATION"] }
+      },
+      "additionalProperties": false
+    }
+  ]
+}

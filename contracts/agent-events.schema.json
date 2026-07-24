@@ -1,0 +1,38 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://xiangdi.local/contracts/agent-events.schema.json",
+  "title": "Xiangdi Agent SSE Event",
+  "type": "object",
+  "required": [
+    "version",
+    "event_id",
+    "session_id",
+    "run_id",
+    "request_id",
+    "seq",
+    "timestamp",
+    "type",
+    "data"
+  ],
+  "properties": {
+    "version": { "const": "1.0" },
+    "event_id": { "type": "string" },
+    "session_id": { "type": "string" },
+    "run_id": { "type": "string" },
+    "request_id": { "type": "string" },
+    "seq": { "type": "integer", "minimum": 1 },
+    "timestamp": { "type": "string", "format": "date-time" },
+    "type": {
+      "enum": [
+        "run.accepted",
+        "agent.state",
+        "text.delta",
+        "ui.action",
+        "run.completed",
+        "run.failed"
+      ]
+    },
+    "data": { "type": "object" }
+  },
+  "additionalProperties": false
+}
